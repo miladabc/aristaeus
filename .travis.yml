@@ -2,6 +2,10 @@ sudo: required
 services:
   - docker
 
+before_install:
+  # Tests goes here
+  - ls
+
 deploy:
   provider: heroku
   api_key:
