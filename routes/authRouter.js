@@ -9,7 +9,9 @@ const {
   isItAvailable,
   googleOAuth,
   confirmation,
-  resend
+  resend,
+  forgotPass,
+  resetPass
 } = require('../controllers/authController');
 
 // Validator configuration
@@ -48,5 +50,15 @@ router.post('/confirmation', confirmation);
 // @desc   Resend confirmation email
 // @access Public
 router.post('/resend', resend);
+
+// @route  POST auth/forgotpass
+// @desc   Send password reset email
+// @access Public
+router.post('/forgotpass', forgotPass);
+
+// @route  POST auth/resetpass
+// @desc   Reset user password
+// @access Public
+router.post('/resetpass', resetPass);
 
 module.exports = router;

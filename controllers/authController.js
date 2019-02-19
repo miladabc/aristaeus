@@ -1,13 +1,17 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const uuid = require('uuid/v1');
 
 const keys = require('../config/keys');
 const User = require('../models/user');
 const Token = require('../models/token');
-const mailer = require('../config/mailer.js');
+const Mailer = require('../services/Mailer');
+const {
+  resendEmailTemplate,
+  forgotPassTemplate
+} = require('../services/emailTemplates');
 
-function tokenForuser(user) {
+const jwtForuser = user => {
   const payload = {
     sub: user.id,
     firstName: user.firstName,
@@ -17,11 +21,10 @@ function tokenForuser(user) {
   const token = jwt.sign(payload, keys.secretOrKey, keys.jwtExpires);
 
   return 'Bearer ' + token;
-}
+};
 
-function createAndMailToken(req, res, next) {
-  const user = res.locals.user;
-  const token = crypto.randomBytes(16).toString('hex');
+const createAndMailToken = ({ user, subject, content, next }) => {
+  const token = uuid();
 
   const newToken = new Token({
     userId: user._id,
@@ -31,24 +34,17 @@ function createAndMailToken(req, res, next) {
   newToken
     .save()
     .then(token => {
-      const mailOptions = {
+      const mailer = new Mailer({
         from: 'no-reply@coolapp.com',
-        to: user.email,
-        subject: 'Coolapp account verification',
-        text: `Hello ${user.firstName},
-          
-          Please verify your account by clicking the link: 
-          ${keys.clientURL}/confirmemail?token=${token.token}`
-      };
-
-      mailer.send(mailOptions);
-      res.json({
-        success: true,
-        msg: `A verification email has been sent to ${user.email}.`
+        subject,
+        recipients: [user.email],
+        content: content(token.token)
       });
+
+      mailer.send();
     })
     .catch(next);
-}
+};
 
 const signup = [
   // Check for existing user
@@ -97,8 +93,17 @@ const signup = [
         newUser
           .save()
           .then(user => {
-            res.locals.user = user;
-            createAndMailToken(req, res, next);
+            createAndMailToken({
+              user,
+              subject: 'Coolapp account verification',
+              content: resendEmailTemplate,
+              next
+            });
+
+            res.json({
+              success: true,
+              msg: `A verification email has been sent to ${user.email}.`
+            });
           })
           .catch(next);
       })
@@ -135,7 +140,7 @@ const signin = (req, res, next) => {
           }
 
           // User matched, return it
-          return res.json({ success: true, token: tokenForuser(user) });
+          return res.json({ success: true, token: jwtForuser(user) });
         })
         .catch(next);
     })
@@ -167,7 +172,7 @@ const isItAvailable = (req, res, next) => {
 };
 
 const googleOAuth = (req, res) => {
-  res.json({ success: true, token: tokenForuser(req.user) });
+  res.json({ success: true, token: jwtForuser(req.user) });
 };
 
 const confirmation = [
@@ -213,6 +218,8 @@ const confirmation = [
               success: true,
               msg: 'The account has been verified. Please log in.'
             });
+
+            token.remove();
           })
           .catch(next);
       })
@@ -238,11 +245,102 @@ const resend = (req, res, next) => {
         });
       }
 
-      res.locals.user = user;
-      createAndMailToken(req, res, next);
+      createAndMailToken({
+        user,
+        subject: 'Coolapp account verification',
+        content: resendEmailTemplate,
+        next
+      });
+
+      res.json({
+        success: true,
+        msg: `A verification email has been sent to ${user.email}.`
+      });
     })
     .catch(next);
 };
+
+const forgotPass = (req, res, next) => {
+  const { emailOrUsername } = req.body;
+
+  User.findOne()
+    .or([{ username: emailOrUsername }, { email: emailOrUsername }])
+    .then(user => {
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          msg: 'We were unable to find a user with that email.'
+        });
+      }
+
+      createAndMailToken({
+        user,
+        subject: 'Coolapp Password Reset',
+        content: forgotPassTemplate,
+        next
+      });
+
+      res.json({
+        success: true,
+        msg: `A password reset link has been sent to ${user.email}.`
+      });
+    })
+    .catch(next);
+};
+
+const resetPass = [
+  (req, res, next) => {
+    Token.findOne({ token: req.body.token })
+      .then(token => {
+        if (!token) {
+          return res.status(401).json({
+            success: false,
+            msg:
+              'We were unable to find a valid token. Your token may have expired.'
+          });
+        }
+
+        res.locals.token = token;
+        next();
+      })
+      .catch(next);
+  },
+  (req, res, next) => {
+    const token = res.locals.token;
+    const { password } = req.body;
+
+    User.findById(token.userId)
+      .then(user => {
+        if (!user) {
+          return res.status(401).json({
+            success: false,
+            msg: 'We were unable to find a user for this token.'
+          });
+        }
+
+        // Hash password
+        bcrypt
+          .hash(password, keys.saltFactor)
+          .then(hash => {
+            user.password = hash;
+
+            // Save the user in database
+            user
+              .save()
+              .then(() => {
+                res.json({
+                  success: true,
+                  msg: 'Your password has been successfully updated'
+                });
+                token.remove();
+              })
+              .catch(next);
+          })
+          .catch(next);
+      })
+      .catch(next);
+  }
+];
 
 module.exports = {
   signup,
@@ -250,5 +348,7 @@ module.exports = {
   isItAvailable,
   googleOAuth,
   confirmation,
-  resend
+  resend,
+  forgotPass,
+  resetPass
 };

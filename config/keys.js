@@ -20,7 +20,7 @@ module.exports = {
   clientURL,
   secretOrKey,
   sendgridAPIKey,
-  saltFactor: 10,
+  saltFactor: 12,
   jwtExpires: { expiresIn: 3600 },
   googleAuth: {
     clientID: googleClientID,
