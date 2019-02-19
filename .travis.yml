@@ -3,8 +3,12 @@ services:
   - docker
 
 before_install:
-  # Tests goes here
+  # Tests preparation
   - ls
+
+script:
+  # Tests goes here
+  - echo "Passed"
 
 deploy:
   provider: heroku
