@@ -1,6 +1,6 @@
 const keys = require('../config/keys');
 
-const resendEmailTemplate = token => {
+const emailVerifyTemplate = token => {
   return `
     <html>
       <body>
@@ -36,4 +36,4 @@ const forgotPassTemplate = token => {
   `;
 };
 
-module.exports = { resendEmailTemplate, forgotPassTemplate };
+module.exports = { emailVerifyTemplate, forgotPassTemplate };

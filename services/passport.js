@@ -14,7 +14,7 @@ const jwtOptions = {
 };
 
 const jwtLogin = new JwtStrategy(jwtOptions, (payload, done) => {
-  User.findById(payload.sub)
+  User.findById(payload.id)
     .then(user => {
       if (user) {
         return done(null, user);

@@ -14,18 +14,19 @@ const {
   resetPass
 } = require('../controllers/authController');
 
-// Validator configuration
-const validation = require('../validation/index');
+// Validators configuration
+const signupValidation = require('../validation/signup');
+const signinValidation = require('../validation/signin');
 
 // @route  POST auth/signup
 // @desc   Sign the user up
 // @access Public
-router.post('/signup', validate(validation.signup), signup);
+router.post('/signup', validate(signupValidation), signup);
 
 // @route  POST auth/signin
 // @desc   Sign the user in
 // @access Public
-router.post('/signin', validate(validation.signin), signin);
+router.post('/signin', validate(signinValidation), signin);
 
 // @route  POST auth/isitavailable
 // @desc   Check if username or email is available for signup

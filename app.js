@@ -4,6 +4,7 @@ const passport = require('passport');
 const cors = require('cors');
 
 const authRouter = require('./routes/authRouter');
+const userRouter = require('./routes/userRouter');
 
 const app = express();
 
@@ -19,9 +20,7 @@ app.use(morgan('dev'));
 app.use(express.json({ type: '*/*' }));
 
 app.use('/auth', authRouter);
-app.get('/', passport.authenticate('jwt', { session: false }), (req, res) => {
-  res.send('hi');
-});
+app.use('/user', passport.authenticate('jwt', { session: false }), userRouter);
 
 // error handler
 app.use((err, req, res, next) => {

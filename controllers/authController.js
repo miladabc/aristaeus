@@ -1,50 +1,13 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const uuid = require('uuid/v1');
 
 const keys = require('../config/keys');
 const User = require('../models/user');
 const Token = require('../models/token');
-const Mailer = require('../services/Mailer');
+const { jwtForUser, createAndMailToken } = require('../utils');
 const {
-  resendEmailTemplate,
+  emailVerifyTemplate,
   forgotPassTemplate
 } = require('../services/emailTemplates');
-
-const jwtForuser = user => {
-  const payload = {
-    sub: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    username: user.username
-  };
-  const token = jwt.sign(payload, keys.secretOrKey, keys.jwtExpires);
-
-  return 'Bearer ' + token;
-};
-
-const createAndMailToken = ({ user, subject, content, next }) => {
-  const token = uuid();
-
-  const newToken = new Token({
-    userId: user._id,
-    token
-  });
-
-  newToken
-    .save()
-    .then(token => {
-      const mailer = new Mailer({
-        from: 'no-reply@coolapp.com',
-        subject,
-        recipients: [user.email],
-        content: content(token.token)
-      });
-
-      mailer.send();
-    })
-    .catch(next);
-};
 
 const signup = [
   // Check for existing user
@@ -96,7 +59,7 @@ const signup = [
             createAndMailToken({
               user,
               subject: 'Coolapp account verification',
-              content: resendEmailTemplate,
+              content: emailVerifyTemplate,
               next
             });
 
@@ -140,7 +103,7 @@ const signin = (req, res, next) => {
           }
 
           // User matched, return it
-          return res.json({ success: true, token: jwtForuser(user) });
+          return res.json({ success: true, token: jwtForUser(user) });
         })
         .catch(next);
     })
@@ -150,21 +113,19 @@ const signin = (req, res, next) => {
 const isItAvailable = (req, res, next) => {
   const { username, email } = req.body;
 
-  User.findOne()
+  User.find()
     .or([{ username }, { email }])
-    .then(user => {
-      if (!user) {
+    .then(users => {
+      if (users.length === 0) {
         return res.json({ success: true });
       }
 
-      const response = { success: false };
+      const response = { success: false, username: true, email: true };
 
-      if (user.username === username) {
-        response.field = 'username';
-      }
-      if (user.email === email) {
-        response.field = 'email';
-      }
+      users.forEach(user => {
+        if (user.username === username) response.username = false;
+        if (user.email === email) response.email = false;
+      });
 
       return res.json(response);
     })
@@ -172,7 +133,7 @@ const isItAvailable = (req, res, next) => {
 };
 
 const googleOAuth = (req, res) => {
-  res.json({ success: true, token: jwtForuser(req.user) });
+  res.json({ success: true, token: jwtForUser(req.user) });
 };
 
 const confirmation = [
@@ -180,7 +141,7 @@ const confirmation = [
     Token.findOne({ token: req.body.token })
       .then(token => {
         if (!token) {
-          return res.status(401).json({
+          return res.status(422).json({
             success: false,
             msg:
               'We were unable to find a valid token. Your token may have expired.'
@@ -198,13 +159,13 @@ const confirmation = [
     User.findById(token.userId)
       .then(user => {
         if (!user) {
-          return res.status(401).json({
+          return res.status(422).json({
             success: false,
             msg: 'We were unable to find a user for this token.'
           });
         }
         if (user.isVerified) {
-          return res.status(400).json({
+          return res.status(422).json({
             success: false,
             msg: 'This user has already been verified.'
           });
@@ -248,7 +209,7 @@ const resend = (req, res, next) => {
       createAndMailToken({
         user,
         subject: 'Coolapp account verification',
-        content: resendEmailTemplate,
+        content: emailVerifyTemplate,
         next
       });
 
