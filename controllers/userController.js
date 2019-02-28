@@ -5,7 +5,7 @@ const User = require('../models/user');
 const { jwtForUser, createAndMailToken } = require('../utils');
 const { emailVerifyTemplate } = require('../services/emailTemplates');
 
-const profileUpdate = [
+const updateProfile = [
   (req, res, next) => {
     const { username, email } = req.body;
 
@@ -40,8 +40,7 @@ const profileUpdate = [
       username,
       email,
       currentPassword,
-      newPassword,
-      confirmNewPassword
+      newPassword
     } = req.body;
 
     if (firstName) user.firstName = firstName;
@@ -53,29 +52,25 @@ const profileUpdate = [
       res.locals.emailChanged = true;
     }
 
-    if (!(currentPassword && newPassword && confirmNewPassword)) {
-      // todo
-      res.locals.user = user;
-      return next();
+    if (currentPassword && newPassword) {
+      // Check password
+      bcrypt
+        .compare(currentPassword, user.password)
+        .then(isMatch => {
+          // Password does not match
+          if (!isMatch) {
+            return res
+              .status(422)
+              .json({ success: false, msg: 'Incorrect current password' });
+          }
+
+          // Password matched
+          user.password = bcrypt.hashSync(newPassword, keys.saltFactor);
+          res.locals.user = user;
+          next();
+        })
+        .catch(next);
     }
-
-    // Check password
-    bcrypt
-      .compare(currentPassword, user.password)
-      .then(isMatch => {
-        // Password does not match
-        if (!isMatch) {
-          return res
-            .status(422)
-            .json({ success: false, msg: 'Incorrect current password' });
-        }
-
-        // Password matched
-        user.password = bcrypt.hashSync(newPassword, keys.saltFactor);
-        res.locals.user = user;
-        next();
-      })
-      .catch(next);
   },
   (req, res, next) => {
     const user = res.locals.user;
@@ -110,4 +105,4 @@ const profileUpdate = [
   }
 ];
 
-module.exports = { profileUpdate };
+module.exports = { updateProfile };

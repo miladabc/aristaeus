@@ -1,8 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const validate = require('express-validation');
 const passport = require('passport');
 
+const validate = require('../validation');
+const {
+  SignupSchema,
+  SigninSchema,
+  resetPassSchema
+} = require('../validation/schema');
 const {
   signup,
   signin,
@@ -14,19 +19,15 @@ const {
   resetPass
 } = require('../controllers/authController');
 
-// Validators configuration
-const signupValidation = require('../validation/signup');
-const signinValidation = require('../validation/signin');
-
 // @route  POST auth/signup
 // @desc   Sign the user up
 // @access Public
-router.post('/signup', validate(signupValidation), signup);
+router.post('/signup', validate(SignupSchema), signup);
 
 // @route  POST auth/signin
 // @desc   Sign the user in
 // @access Public
-router.post('/signin', validate(signinValidation), signin);
+router.post('/signin', validate(SigninSchema), signin);
 
 // @route  POST auth/isitavailable
 // @desc   Check if username or email is available for signup
@@ -60,6 +61,6 @@ router.post('/forgotpass', forgotPass);
 // @route  POST auth/resetpass
 // @desc   Reset user password
 // @access Public
-router.post('/resetpass', resetPass);
+router.post('/resetpass', validate(resetPassSchema), resetPass);
 
 module.exports = router;
