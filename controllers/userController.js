@@ -52,25 +52,28 @@ const updateProfile = [
       res.locals.emailChanged = true;
     }
 
-    if (currentPassword && newPassword) {
-      // Check password
-      bcrypt
-        .compare(currentPassword, user.password)
-        .then(isMatch => {
-          // Password does not match
-          if (!isMatch) {
-            return res
-              .status(422)
-              .json({ success: false, msg: 'Incorrect current password' });
-          }
-
-          // Password matched
-          user.password = bcrypt.hashSync(newPassword, keys.saltFactor);
-          res.locals.user = user;
-          next();
-        })
-        .catch(next);
+    if (!currentPassword) {
+      res.locals.user = user;
+      return next();
     }
+
+    // Check password
+    bcrypt
+      .compare(currentPassword, user.password)
+      .then(isMatch => {
+        // Password does not match
+        if (!isMatch) {
+          return res
+            .status(422)
+            .json({ success: false, msg: 'Incorrect current password' });
+        }
+
+        // Password matched
+        user.password = bcrypt.hashSync(newPassword, keys.saltFactor);
+        res.locals.user = user;
+        next();
+      })
+      .catch(next);
   },
   (req, res, next) => {
     const user = res.locals.user;
