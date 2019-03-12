@@ -254,7 +254,7 @@ const resetPass = [
     Token.findOne({ token: req.body.token })
       .then(token => {
         if (!token) {
-          return res.status(401).json({
+          return res.status(422).json({
             success: false,
             msg:
               'We were unable to find a valid token. Your token may have expired.'
@@ -273,7 +273,7 @@ const resetPass = [
     User.findById(token.userId)
       .then(user => {
         if (!user) {
-          return res.status(401).json({
+          return res.status(422).json({
             success: false,
             msg: 'We were unable to find a user for this token.'
           });

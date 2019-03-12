@@ -1,5 +1,5 @@
 const passport = require('passport');
-const crypto = require('crypto');
+const uuid = require('uuid/v1');
 const { Strategy: JwtStrategy } = require('passport-jwt');
 const { ExtractJwt } = require('passport-jwt');
 const { Strategy: GoogleTokenStrategy } = require('passport-google-token');
@@ -34,7 +34,7 @@ const googleLogin = new GoogleTokenStrategy(
     const username = email;
     const isVerified = true; // No verification needed
     const avatar = profile._json.picture;
-    const password = crypto.randomBytes(20).toString('hex');
+    const password = uuid();
 
     User.findOne({ email })
       .then(user => {
