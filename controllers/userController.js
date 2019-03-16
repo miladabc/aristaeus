@@ -1,9 +1,18 @@
 const bcrypt = require('bcrypt');
+const cloudinary = require('cloudinary');
 
 const keys = require('../config/keys');
 const User = require('../models/user');
 const { jwtForUser, createAndMailToken } = require('../utils');
 const { emailVerifyTemplate } = require('../services/emailTemplates');
+
+const deleteAvatarFromCloud = avatar => {
+  if (avatar) {
+    cloudinary.v2.uploader.destroy(avatar.slice(0, -4), {
+      invalidate: true
+    });
+  }
+};
 
 const updateProfile = [
   (req, res, next) => {
@@ -81,18 +90,10 @@ const updateProfile = [
     user
       .save()
       .then(user => {
-        const updatedUser = {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
-          email: user.email
-        };
-
         res.json({
           success: true,
           msg: 'Profile has been successfully updated',
-          token: jwtForUser(updatedUser)
+          token: jwtForUser(user)
         });
 
         if (res.locals.emailChanged) {
@@ -108,4 +109,40 @@ const updateProfile = [
   }
 ];
 
-module.exports = { updateProfile };
+const updateProfileAvatar = (req, res, next) => {
+  deleteAvatarFromCloud(req.user.avatar);
+
+  const avatar = `${req.body.public_id}.${req.body.format}`;
+
+  req.user.avatar = avatar;
+
+  req.user
+    .save()
+    .then(user => {
+      res.json({
+        success: true,
+        msg: 'Avatar has been successfully changed',
+        token: jwtForUser(user)
+      });
+    })
+    .catch(next);
+};
+
+const deleteProfileAvatar = (req, res, next) => {
+  deleteAvatarFromCloud(req.user.avatar);
+
+  req.user.avatar = '';
+
+  req.user
+    .save()
+    .then(user => {
+      res.json({
+        success: true,
+        msg: 'Avatar has been removed',
+        token: jwtForUser(user)
+      });
+    })
+    .catch(next);
+};
+
+module.exports = { updateProfile, updateProfileAvatar, deleteProfileAvatar };

@@ -8,11 +8,8 @@ const sendgridAPIKey = process.env.SENDGRID_API_KEY;
 const googleClientID = process.env.GOOGLE_AUTH_ID;
 const googleClientSecret = process.env.GOOGLE_AUTH_SECRET;
 
-const githubClientID = process.env.GITHUB_AUTH_ID;
-const githubClientSecret = process.env.GITHUB_AUTH_SECRET;
-
-const linkedinClientID = process.env.LINKEDIN_AUTH_ID;
-const linkedinClientSecret = process.env.LINKEDIN_AUTH_SECRET;
+const cloudinaryKey = process.env.CLOUDINARY_KEY;
+const cloudinarySecret = process.env.CLOUDINARY_SECRET;
 
 module.exports = {
   port,
@@ -26,14 +23,6 @@ module.exports = {
     clientID: googleClientID,
     clientSecret: googleClientSecret
   },
-  githubAuth: {
-    clientID: githubClientID,
-    clientSecret: githubClientSecret,
-    scope: ['user:email'] // Fetch private emails
-  },
-  linkedinAuth: {
-    clientID: linkedinClientID,
-    clientSecret: linkedinClientSecret,
-    scope: ['r_emailaddress', 'r_basicprofile']
-  }
+  cloudinaryKey,
+  cloudinarySecret
 };

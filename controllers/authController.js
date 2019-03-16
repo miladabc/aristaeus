@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const cloudinary = require('cloudinary');
 
 const keys = require('../config/keys');
 const User = require('../models/user');
@@ -83,7 +84,7 @@ const signin = (req, res, next) => {
     .then(user => {
       if (!user) {
         error.msg = 'Email or username does not exist';
-        return res.status(401).json(error);
+        return res.status(422).json(error);
       }
 
       // Check password
@@ -303,6 +304,26 @@ const resetPass = [
   }
 ];
 
+const uploadURL = (req, res) => {
+  const timestamp = Math.round(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { timestamp: timestamp, folder: 'avatars' },
+    keys.cloudinarySecret
+  );
+  const url = cloudinary.utils.api_url('upload', {
+    cloud_name: 'miladdarren',
+    resource_type: 'image'
+  });
+
+  res.json({
+    signature,
+    timestamp,
+    api_key: keys.cloudinaryKey,
+    url,
+    folder: 'avatars'
+  });
+};
+
 module.exports = {
   signup,
   signin,
@@ -311,5 +332,6 @@ module.exports = {
   confirmation,
   resend,
   forgotPass,
-  resetPass
+  resetPass,
+  uploadURL
 };

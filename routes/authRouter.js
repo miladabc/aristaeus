@@ -16,7 +16,8 @@ const {
   confirmation,
   resend,
   forgotPass,
-  resetPass
+  resetPass,
+  uploadURL
 } = require('../controllers/authController');
 
 // @route  POST auth/signup
@@ -62,5 +63,14 @@ router.post('/forgotpass', forgotPass);
 // @desc   Reset user password
 // @access Public
 router.post('/resetpass', validate(resetPassSchema), resetPass);
+
+// @route  GET auth/uploadurl
+// @desc   Generate signature for image upload
+// @access Private
+router.get(
+  '/uploadurl',
+  passport.authenticate('jwt', { session: false }),
+  uploadURL
+);
 
 module.exports = router;

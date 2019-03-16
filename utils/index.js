@@ -11,7 +11,8 @@ const jwtForUser = user => {
     firstName: user.firstName,
     lastName: user.lastName,
     username: user.username,
-    email: user.email
+    email: user.email,
+    avatar: user.avatar
   };
   const token = jwt.sign(payload, keys.secretOrKey, keys.jwtExpires);
 
