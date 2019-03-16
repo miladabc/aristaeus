@@ -4,10 +4,16 @@ const router = express.Router();
 const validate = require('../validation');
 const { ProfileSchema } = require('../validation/schema');
 const {
+  getUser,
   updateProfile,
   updateProfileAvatar,
   deleteProfileAvatar
 } = require('../controllers/userController');
+
+// @route  GET user
+// @desc   Get user information
+// @access Private
+router.get('/', getUser);
 
 // @route  PATCH user/profile
 // @desc   Update user profile

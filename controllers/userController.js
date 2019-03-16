@@ -14,6 +14,17 @@ const deleteAvatarFromCloud = avatar => {
   }
 };
 
+const getUser = (req, res) => {
+  res.json({
+    id: req.user.id,
+    firstName: req.user.firstName,
+    lastName: req.user.lastName,
+    username: req.user.username,
+    email: req.user.email,
+    avatar: req.user.avatar
+  });
+};
+
 const updateProfile = [
   (req, res, next) => {
     const { username, email } = req.body;
@@ -145,4 +156,9 @@ const deleteProfileAvatar = (req, res, next) => {
     .catch(next);
 };
 
-module.exports = { updateProfile, updateProfileAvatar, deleteProfileAvatar };
+module.exports = {
+  getUser,
+  updateProfile,
+  updateProfileAvatar,
+  deleteProfileAvatar
+};
