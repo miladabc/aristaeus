@@ -15,14 +15,7 @@ const deleteAvatarFromCloud = avatar => {
 };
 
 const getUser = (req, res) => {
-  res.json({
-    id: req.user.id,
-    firstName: req.user.firstName,
-    lastName: req.user.lastName,
-    username: req.user.username,
-    email: req.user.email,
-    avatar: req.user.avatar
-  });
+  res.json({ success: true, token: jwtForUser(req.user) });
 };
 
 const updateProfile = [
