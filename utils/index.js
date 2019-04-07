@@ -5,6 +5,13 @@ const keys = require('../config/keys');
 const Token = require('../models/token');
 const Mailer = require('../services/Mailer');
 
+const wrap = fn => (...args) => {
+  const fnReturn = fn(...args);
+  const next = args[args.length - 1];
+
+  return Promise.resolve(fnReturn).catch(next);
+};
+
 const jwtForUser = user => {
   const payload = {
     id: user.id,
@@ -19,7 +26,7 @@ const jwtForUser = user => {
   return 'Bearer ' + token;
 };
 
-const createAndMailToken = ({ user, subject, content, next }) => {
+const createAndMailToken = async ({ user, subject, content, next }) => {
   const token = uuid();
 
   const newToken = new Token({
@@ -27,19 +34,15 @@ const createAndMailToken = ({ user, subject, content, next }) => {
     token
   });
 
-  newToken
-    .save()
-    .then(token => {
-      const mailer = new Mailer({
-        from: 'no-reply@coolapp.com',
-        subject,
-        recipients: [user.email],
-        content: content(token.token)
-      });
+  const savedToken = await newToken.save().catch(next);
+  const mailer = new Mailer({
+    from: 'no-reply@coolapp.com',
+    subject,
+    recipients: [user.email],
+    content: content(savedToken.token)
+  });
 
-      mailer.send();
-    })
-    .catch(next);
+  mailer.send();
 };
 
-module.exports = { jwtForUser, createAndMailToken };
+module.exports = { wrap, jwtForUser, createAndMailToken };

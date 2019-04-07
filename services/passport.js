@@ -13,21 +13,19 @@ const jwtOptions = {
   secretOrKey: keys.secretOrKey
 };
 
-const jwtLogin = new JwtStrategy(jwtOptions, (payload, done) => {
-  User.findById(payload.id)
-    .then(user => {
-      if (user) {
-        return done(null, user);
-      }
+const jwtLogin = new JwtStrategy(jwtOptions, async (payload, done) => {
+  const user = await User.findById(payload.id).catch(err => done(err, false));
 
-      return done(null, false);
-    })
-    .catch(err => done(err, false));
+  if (user) {
+    return done(null, user);
+  }
+
+  return done(null, false);
 });
 
 const googleLogin = new GoogleTokenStrategy(
   keys.googleAuth,
-  (accessToken, refreshToken, profile, done) => {
+  async (accessToken, refreshToken, profile, done) => {
     const firstName = profile.name.givenName;
     const lastName = profile.name.familyName;
     const email = profile.emails[0].value; // Pull the first email
@@ -36,30 +34,29 @@ const googleLogin = new GoogleTokenStrategy(
     const avatar = profile._json.picture;
     const password = uuid();
 
-    User.findOne({ email })
-      .then(user => {
-        // User found
-        if (user) {
-          return done(null, user);
-        }
+    const existingUser = await User.findOne({ email }).catch(err =>
+      done(err, false)
+    );
 
-        // No user was found, lets create a new one
-        const newUser = new User({
-          firstName,
-          lastName,
-          email,
-          username,
-          isVerified,
-          avatar,
-          password
-        });
+    // User found
+    if (existingUser) {
+      return done(null, existingUser);
+    }
 
-        newUser
-          .save()
-          .then(user => done(null, user))
-          .catch(err => done(err, false));
-      })
-      .catch(err => done(err, false));
+    // No user was found, lets create a new one
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      username,
+      isVerified,
+      avatar,
+      password
+    });
+
+    const createdUser = await newUser.save().catch(err => done(err, false));
+
+    return done(null, createdUser);
   }
 );
 
