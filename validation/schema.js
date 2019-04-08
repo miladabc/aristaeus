@@ -43,6 +43,7 @@ const SigninSchema = Joi.object().keys({
 });
 
 const resetPassSchema = Joi.object().keys({
+  token: Joi.string().required(),
   password: Joi.string()
     .min(5)
     .max(30)

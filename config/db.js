@@ -6,10 +6,7 @@ mongoose.Promise = global.Promise;
 mongoose.set('useCreateIndex', true);
 
 const connect = () => {
-  mongoose.connect(
-    keys.dbURI,
-    { useNewUrlParser: true }
-  );
+  mongoose.connect(keys.dbURI, { useNewUrlParser: true });
 };
 
 // Connect to mongo host, set retry on initial fail
