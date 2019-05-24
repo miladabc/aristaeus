@@ -81,11 +81,12 @@ const signin = wrap(async (req, res, next) => {
     return res.status(422).json(error);
   }
 
+  /* COMMENTED FOR SIGNING IN EASILY */
   // User is not verified
-  if (!user.isVerified) {
-    error.msg = 'You have to verify your email in order to sign in';
-    return res.status(422).json(error);
-  }
+  // if (!user.isVerified) {
+  //   error.msg = 'You have to verify your email in order to sign in';
+  //   return res.status(422).json(error);
+  // }
 
   // User matched, return it
   return res.json({
