@@ -16,8 +16,11 @@ Play now:
 - **Mongoose** as ODM
 - **Socket.io** for real-time communication and chat support
 - **Passport.js** for authentication by both JWT and Google OAuth strategy
+- **Docker** for containerization
+- **Travis-CI** as CI/CD
 - **Sendgrid API** as e-mail service
 - **Cloudinary API** as cloud service for image upload functionality
+- **Heroku** as host
 
 ## NPM Commands
 
