@@ -88,7 +88,11 @@ const signin = wrap(async (req, res, next) => {
   }
 
   // User matched, return it
-  return res.json({ success: true, token: jwtForUser(user) });
+  return res.json({
+    success: true,
+    token: jwtForUser(user),
+    username: user.username
+  });
 });
 
 const isItAvailable = wrap(async (req, res, next) => {
