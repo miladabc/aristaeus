@@ -47,14 +47,18 @@ const initSocketIO = server => {
       socket.emit('roomsList', rooms);
     });
 
-    socket.on('joinRoom', ({ roomToJoin, joinedRoom, creating }, cb) => {
-      socket.leave(roomNamePrefix + joinedRoom);
-      socket.join(roomNamePrefix + roomToJoin, () => {
-        cb();
-        if (!creating) io.to(roomNamePrefix + roomToJoin).emit('roomReady');
-        io.emit('roomsList', rooms);
-      });
-    });
+    socket.on(
+      'joinRoom',
+      ({ roomToJoin, roomMode, joinedRoom, creating }, cb) => {
+        socket.leave(roomNamePrefix + joinedRoom);
+        socket.join(roomNamePrefix + roomToJoin, () => {
+          cb();
+          if (!creating) io.to(roomNamePrefix + roomToJoin).emit('roomReady');
+          if (creating) rooms[roomNamePrefix + roomToJoin].mode = roomMode;
+          io.emit('roomsList', rooms);
+        });
+      }
+    );
 
     socket.on('message', ({ room, message }) => {
       socket.to(roomNamePrefix + room).broadcast.emit('message', message);
