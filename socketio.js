@@ -37,7 +37,7 @@ const initSocketIO = server => {
   });
 
   io.on('connection', socket => {
-    const rooms = io.sockets.adapter.rooms;
+    const { rooms } = io.sockets.adapter;
 
     socket.on('disconnect', () => {
       io.emit('roomsList', rooms);

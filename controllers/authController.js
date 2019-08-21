@@ -52,7 +52,7 @@ const signup = wrap(async (req, res, next) => {
     next
   });
 
-  res.json({
+  return res.json({
     success: true,
     msg: `A verification email has been sent to ${savedUser.email}.`
   });
@@ -148,12 +148,12 @@ const confirmation = wrap(async (req, res, next) => {
   user.isVerified = true;
   await user.save();
 
-  res.json({
+  token.remove();
+
+  return res.json({
     success: true,
     msg: 'The account has been verified. Please log in.'
   });
-
-  token.remove();
 });
 
 const resend = wrap(async (req, res, next) => {
@@ -182,7 +182,7 @@ const resend = wrap(async (req, res, next) => {
     next
   });
 
-  res.json({
+  return res.json({
     success: true,
     msg: `A verification email has been sent to ${user.email}.`
   });
@@ -210,7 +210,7 @@ const forgotPass = wrap(async (req, res, next) => {
     next
   });
 
-  res.json({
+  return res.json({
     success: true,
     msg: `A password reset link has been sent to ${user.email}.`
   });
@@ -242,17 +242,18 @@ const resetPass = wrap(async (req, res, next) => {
   // Save the user in database
   await user.save();
 
-  res.json({
+  token.remove();
+
+  return res.json({
     success: true,
     msg: 'Your password has been successfully updated'
   });
-  token.remove();
 });
 
 const uploadURL = (req, res) => {
   const timestamp = Math.round(Date.now() / 1000);
   const signature = cloudinary.utils.api_sign_request(
-    { timestamp: timestamp, folder: 'avatars' },
+    { timestamp, folder: 'avatars' },
     keys.cloudinarySecret
   );
   const url = cloudinary.utils.api_url('upload', {

@@ -20,7 +20,7 @@ const getUser = (req, res) => {
 };
 
 const updateProfile = wrap(async (req, res, next) => {
-  const user = req.user;
+  const { user } = req;
   const {
     firstName,
     lastName,
@@ -31,15 +31,15 @@ const updateProfile = wrap(async (req, res, next) => {
   } = req.body;
 
   if (username || email) {
-    const users = await User.find().or([{ username }, { email }]);
+    const existingUsers = await User.find().or([{ username }, { email }]);
 
-    if (users.length > 0) {
+    if (existingUsers.length > 0) {
       const response = { success: false };
 
-      users.forEach(user => {
-        if (user.username === username)
+      existingUsers.forEach(existingUser => {
+        if (existingUser.username === username)
           response.msg = 'Username already in use';
-        if (user.email === email) response.msg = 'Email already in use';
+        if (existingUser.email === email) response.msg = 'Email already in use';
       });
 
       return res.status(422).json(response);
@@ -71,12 +71,6 @@ const updateProfile = wrap(async (req, res, next) => {
 
   const updatedUser = await user.save();
 
-  res.json({
-    success: true,
-    msg: 'Profile has been successfully updated',
-    token: jwtForUser(updatedUser)
-  });
-
   if (!updatedUser.isVerified) {
     createAndMailToken({
       user: updatedUser,
@@ -85,6 +79,12 @@ const updateProfile = wrap(async (req, res, next) => {
       next
     });
   }
+
+  return res.json({
+    success: true,
+    msg: 'Profile has been successfully updated',
+    token: jwtForUser(updatedUser)
+  });
 });
 
 const updateProfileAvatar = wrap(async (req, res, next) => {

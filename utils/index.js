@@ -23,7 +23,7 @@ const jwtForUser = user => {
   };
   const token = jwt.sign(payload, keys.secretOrKey, keys.jwtExpires);
 
-  return 'Bearer ' + token;
+  return `Bearer ${token}`;
 };
 
 const createAndMailToken = async ({ user, subject, content, next }) => {

@@ -6,6 +6,8 @@ module.exports = schema => {
 
     if (!error) return next();
 
-    res.status(422).json({ success: false, msg: error.details[0].message });
+    return res
+      .status(422)
+      .json({ success: false, msg: error.details[0].message });
   };
 };
