@@ -7,11 +7,12 @@
   "extends": ["airbnb-base", "prettier"],
   "plugins": ["prettier"],
   "rules": {
-    "prettier/prettier": ["error"],
+    "prettier/prettier": ["error", { "singleQuote": true }],
     "no-console": "off",
     "class-methods-use-this": "off",
     "no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
     "no-underscore-dangle": "off",
-    "no-plusplus": "off"
+    "no-plusplus": "off",
+    "no-param-reassign": ["error", { "props": false }]
   }
 }

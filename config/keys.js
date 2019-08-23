@@ -1,5 +1,5 @@
 const port = process.env.PORT || 8000;
-const dbURI = process.env.DB_URI || 'mongodb://localhost/auth';
+const dbURI = process.env.DB_URI || 'mongodb://localhost/xo';
 const clientURL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 const secretOrKey = process.env.SECRET_OR_KEY;

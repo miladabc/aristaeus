@@ -2,7 +2,16 @@ const socketIO = require('socket.io');
 
 const roomNamePrefix = 'ttt_';
 
-const detectWinner = board => {
+const simpleWinner = ({ smallBoard, marksNum }) => {
+  const status = {
+    board: smallBoard,
+    winner: '',
+    line: [],
+    gameFinished: false
+  };
+
+  if (marksNum < 3) return status;
+
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -17,15 +26,64 @@ const detectWinner = board => {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
 
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return { winner: board[a], line: lines[i], gameFinished: true };
+    if (
+      smallBoard[a] &&
+      smallBoard[a] === smallBoard[b] &&
+      smallBoard[a] === smallBoard[c]
+    ) {
+      status.winner = smallBoard[a];
+      status.line = lines[i];
+      status.gameFinished = true;
+
+      return status;
     }
   }
 
-  if (!board.includes(null))
-    return { winner: 'DRAW', line: [], gameFinished: true };
+  if (!smallBoard.includes(null)) {
+    status.winner = 'DRAW';
+    status.gameFinished = true;
 
-  return {};
+    return status;
+  }
+
+  return status;
+};
+const ultimateWinner = board => {
+  const status = { board, winner: '', line: [], gameFinished: false };
+
+  board.largeBoard.forEach((smallBoard, index) => {
+    if (!board.boardsWinner[index]) {
+      const { winner } = simpleWinner(smallBoard);
+
+      if (winner) status.board.boardsWinner[index] = winner;
+    }
+  });
+
+  const numberOfSmallWins = board.boardsWinner.filter(
+    boardWinner => boardWinner !== null
+  ).length;
+
+  const { winner, line, gameFinished } = simpleWinner({
+    smallBoard: board.boardsWinner,
+    marksNum: numberOfSmallWins
+  });
+
+  status.winner = winner;
+  status.line = line;
+  status.gameFinished = gameFinished;
+
+  return status;
+};
+
+const detectWinner = (room, board) => {
+  switch (room.mode) {
+    case 'simple':
+      return simpleWinner(board);
+    case 'ultimate':
+      return ultimateWinner(board);
+    default:
+      return { winner: '', line: [], gameFinished: false };
+  }
 };
 
 const initSocketIO = server => {
@@ -78,12 +136,12 @@ const initSocketIO = server => {
       cb(response);
     });
 
-    socket.on('turnPlayed', ({ room, board }, cb) => {
-      const status = detectWinner(board);
+    socket.on('turnPlayed', ({ room, board, lastMovePosition }, cb) => {
+      const status = detectWinner(room, board);
 
-      socket.to(roomNamePrefix + room).broadcast.emit('turnPlayed', {
-        board,
-        status
+      socket.to(roomNamePrefix + room.name).broadcast.emit('turnPlayed', {
+        status,
+        lastMovePosition
       });
 
       cb(status);
