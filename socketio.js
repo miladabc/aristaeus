@@ -48,23 +48,27 @@ const simpleWinner = ({ smallBoard, marksNum }) => {
 
   return status;
 };
+
 const ultimateWinner = board => {
   const status = { board, winner: '', line: [], gameFinished: false };
 
   board.largeBoard.forEach((smallBoard, index) => {
-    if (!board.boardsWinner[index]) {
-      const { winner } = simpleWinner(smallBoard);
+    if (!board.wonBoards[index].user) {
+      const { winner, line } = simpleWinner(smallBoard);
 
-      if (winner) status.board.boardsWinner[index] = winner;
+      if (winner) {
+        status.board.wonBoards[index].user = winner;
+        status.board.wonBoards[index].row = line;
+      }
     }
   });
 
-  const numberOfSmallWins = board.boardsWinner.filter(
-    boardWinner => boardWinner !== null
+  const numberOfSmallWins = board.wonBoards.filter(
+    boardWinner => boardWinner.user !== null
   ).length;
 
   const { winner, line, gameFinished } = simpleWinner({
-    smallBoard: board.boardsWinner,
+    smallBoard: board.wonBoards.map(wonBoard => wonBoard.user),
     marksNum: numberOfSmallWins
   });
 
