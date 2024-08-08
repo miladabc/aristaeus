@@ -3,7 +3,7 @@
 A real-time two player XO game with chat functionality
 
 Front-end repository:
-https://github.com/Miladdarren/melanthios
+https://github.com/miladabc/melanthios
 
 ![Demo](demo.png)
 
